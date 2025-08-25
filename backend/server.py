@@ -49,8 +49,18 @@ except Exception as e:
 
 # Security
 security = HTTPBearer()
-SECRET_KEY = "medical_store_secret_key_2025"
+SECRET_KEY = os.environ.get("SECRET_KEY", "medical_store_secret_key_2025")
 ALGORITHM = "HS256"
+
+
+@app.get("/api/health")
+async def health_check():
+    try:
+        client.admin.command("ping")
+        return {"status": "ok"}
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        raise HTTPException(status_code=503, detail="Service unavailable")
 
 # Pydantic models
 class Product(BaseModel):
@@ -400,8 +410,10 @@ def initialize_data():
         users_collection.insert_one(admin_user)
 
 # Initialize data on startup
-initialize_data()
-logger.info("Data initialization completed")
+@app.on_event("startup")
+def on_startup():
+    initialize_data()
+    logger.info("Data initialization completed")
 
 # API Routes
 
@@ -510,12 +522,23 @@ async def get_products(
         raise HTTPException(status_code=500, detail="خطا در دریافت محصولات")
 
 @app.get("/api/products/categories")
-async def get_categories():
+async def get_product_categories():
     try:
         categories = products_collection.distinct("category")
         return categories
     except Exception as e:
         logger.error(f"Get categories error: {e}")
+        raise HTTPException(status_code=500, detail="خطا در دریافت دسته‌بندی‌ها")
+
+@app.get("/api/categories")
+async def get_categories():
+    try:
+        categories = products_collection.aggregate([
+            {"$group": {"_id": "$category", "image": {"$first": "$image"}}}
+        ])
+        return [{"name": c["_id"], "image": c.get("image", "")} for c in categories]
+    except Exception as e:
+        logger.error(f"Get categories with images error: {e}")
         raise HTTPException(status_code=500, detail="خطا در دریافت دسته‌بندی‌ها")
 
 @app.get("/api/products/discounted")
