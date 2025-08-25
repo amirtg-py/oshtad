@@ -49,8 +49,18 @@ except Exception as e:
 
 # Security
 security = HTTPBearer()
-SECRET_KEY = "medical_store_secret_key_2025"
+SECRET_KEY = os.environ.get("SECRET_KEY", "medical_store_secret_key_2025")
 ALGORITHM = "HS256"
+
+
+@app.get("/api/health")
+async def health_check():
+    try:
+        client.admin.command("ping")
+        return {"status": "ok"}
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        raise HTTPException(status_code=503, detail="Service unavailable")
 
 # Pydantic models
 class Product(BaseModel):
@@ -400,8 +410,10 @@ def initialize_data():
         users_collection.insert_one(admin_user)
 
 # Initialize data on startup
-initialize_data()
-logger.info("Data initialization completed")
+@app.on_event("startup")
+def on_startup():
+    initialize_data()
+    logger.info("Data initialization completed")
 
 # API Routes
 

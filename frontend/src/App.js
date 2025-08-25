@@ -1,5 +1,10 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import './App.css';
+import { Stethoscope, ShoppingCart, LogIn, UserPlus, Phone, Mail, MapPin } from 'lucide-react';
+import { Button } from './components/ui/button';
+import { Card, CardContent, CardFooter, CardTitle } from './components/ui/card';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
 // Auth Context
 const AuthContext = createContext();
@@ -30,7 +35,7 @@ const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/login`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +62,7 @@ const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/register`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,15 +106,16 @@ const Header = ({ onLoginClick, onRegisterClick, onCartClick, cartCount, onProdu
   const { user, logout } = useAuth();
 
   return (
-    <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl sticky top-0 z-50">
+    <header className="backdrop-blur-md bg-gradient-to-r from-blue-600/90 to-cyan-600/90 text-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-reverse space-x-8">
-            <h1 
-              className="text-2xl font-bold text-right cursor-pointer hover:text-blue-200 transition-colors"
+            <h1
+              className="text-2xl font-bold text-right cursor-pointer hover:text-blue-200 transition-colors flex items-center gap-2"
               onClick={() => setCurrentPage('home')}
             >
-              پیک سلامت
+              <Stethoscope className="w-6 h-6" />
+              <span>پیک سلامت</span>
             </h1>
             <nav className="hidden md:flex space-x-reverse space-x-6">
               <button 
@@ -137,42 +143,44 @@ const Header = ({ onLoginClick, onRegisterClick, onCartClick, cartCount, onProdu
           </div>
           
           <div className="flex items-center space-x-reverse space-x-4">
-            <button 
+            <Button
               onClick={onCartClick}
-              className="relative hover:text-blue-200 transition-colors bg-blue-700 px-3 py-2 hover:bg-blue-600"
+              className="relative flex items-center gap-2 bg-blue-700 hover:bg-blue-600 px-3 py-2"
+              aria-label="سبد خرید"
             >
-              🛒 سبد خرید
+              <ShoppingCart className="w-5 h-5" />
+              <span className="hidden sm:inline">سبد خرید</span>
               {cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs h-6 w-6 flex items-center justify-center animate-pulse">
                   {cartCount}
                 </span>
               )}
-            </button>
-            
+            </Button>
+
             {user ? (
               <div className="flex items-center space-x-reverse space-x-4">
                 <span className="text-sm">سلام {user.full_name}</span>
-                <button 
+                <Button
                   onClick={logout}
-                  className="bg-red-500 hover:bg-red-600 px-4 py-2 transition-colors shadow-lg"
+                  className="bg-red-500 hover:bg-red-600 px-4 py-2 shadow-lg"
                 >
                   خروج
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="flex space-x-reverse space-x-2">
-                <button 
+                <Button
                   onClick={onLoginClick}
-                  className="bg-blue-500 hover:bg-blue-600 px-4 py-2 transition-colors shadow-lg"
+                  className="bg-blue-500 hover:bg-blue-600 px-4 py-2 shadow-lg flex items-center gap-1"
                 >
-                  ورود
-                </button>
-                <button 
+                  <LogIn className="w-4 h-4" /> ورود
+                </Button>
+                <Button
                   onClick={onRegisterClick}
-                  className="bg-green-500 hover:bg-green-600 px-4 py-2 transition-colors shadow-lg"
+                  className="bg-green-500 hover:bg-green-600 px-4 py-2 shadow-lg flex items-center gap-1"
                 >
-                  ثبت نام
-                </button>
+                  <UserPlus className="w-4 h-4" /> ثبت نام
+                </Button>
               </div>
             )}
           </div>
@@ -198,15 +206,18 @@ const HeroSection = ({ onProductsClick }) => {
               ما محصولات و خدمات بهداشتی با کیفیت را ارائه می دهیم
             </p>
             <div className="flex space-x-reverse space-x-4">
-              <button 
+              <Button
                 onClick={onProductsClick}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 pulse-glow"
+                className="bg-blue-600 hover:bg-blue-700 px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:-translate-y-1 pulse-glow"
               >
                 اکنون خرید کنید
-              </button>
-              <button className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg font-semibold transition-all shadow-lg">
+              </Button>
+              <Button
+                variant="outline"
+                className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg font-semibold shadow-lg"
+              >
                 مشاهده کاتالوگ
-              </button>
+              </Button>
             </div>
           </div>
           <div className="lg:w-1/2 mt-10 lg:mt-0 hero-image">
@@ -231,13 +242,13 @@ const ProductCard = ({ product, onAddToCart, onProductClick }) => {
   const discountedPrice = hasDiscount ? product.price * (1 - product.discount_percentage / 100) : product.price;
 
   return (
-    <div 
-      className="bg-white shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 product-card group cursor-pointer"
+    <Card
+      className="product-card hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 group cursor-pointer"
       onClick={() => onProductClick(product)}
     >
       <div className="relative overflow-hidden">
-        <img 
-          src={product.image} 
+        <img
+          src={product.image}
           alt={product.name}
           className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -248,32 +259,34 @@ const ProductCard = ({ product, onAddToCart, onProductClick }) => {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
-      <div className="p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-2 text-right group-hover:text-blue-600 transition-colors">{product.name}</h3>
+      <CardContent className="p-6">
+        <CardTitle className="text-xl font-bold text-gray-800 mb-2 text-right group-hover:text-blue-600 transition-colors">
+          {product.name}
+        </CardTitle>
         <p className="text-gray-600 mb-4 text-right text-sm leading-relaxed">{product.description}</p>
-        <div className="flex justify-between items-center">
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(product);
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-semibold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            افزودن به سبد
-          </button>
-          <div className="text-right">
-            {hasDiscount && (
-              <span className="text-lg text-gray-400 line-through block">
-                {product.price.toLocaleString()} تومان
-              </span>
-            )}
-            <span className="text-2xl font-bold text-blue-600">
-              {Math.round(discountedPrice).toLocaleString()} تومان
+      </CardContent>
+      <CardFooter className="flex justify-between items-center">
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddToCart(product);
+          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+        >
+          افزودن به سبد
+        </Button>
+        <div className="text-right">
+          {hasDiscount && (
+            <span className="text-lg text-gray-400 line-through block">
+              {product.price.toLocaleString()} تومان
             </span>
-          </div>
+          )}
+          <span className="text-2xl font-bold text-blue-600">
+            {Math.round(discountedPrice).toLocaleString()} تومان
+          </span>
         </div>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 };
 
@@ -290,7 +303,7 @@ const ProductsSection = ({ onAddToCart, featured = true }) => {
   const fetchProducts = async () => {
     try {
       const endpoint = featured ? '/api/products/featured' : '/api/products';
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}${endpoint}`);
+      const response = await fetch(`${BACKEND_URL}${endpoint}`);
       if (response.ok) {
         const data = await response.json();
         setProducts(featured ? data : data.products || data);
@@ -357,7 +370,7 @@ const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${product.id}/reviews`);
+      const response = await fetch(`${BACKEND_URL}/api/products/${product.id}/reviews`);
       if (response.ok) {
         const data = await response.json();
         setReviews(data);
@@ -375,7 +388,7 @@ const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${product.id}/reviews`, {
+      const response = await fetch(`${BACKEND_URL}/api/products/${product.id}/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -585,7 +598,7 @@ const ProductsPage = ({ onAddToCart }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/categories`);
+      const response = await fetch(`${BACKEND_URL}/api/products/categories`);
       if (response.ok) {
         const data = await response.json();
         setCategories(data);
@@ -604,7 +617,7 @@ const ProductsPage = ({ onAddToCart }) => {
         ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== ''))
       });
 
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products?${params}`);
+      const response = await fetch(`${BACKEND_URL}/api/products?${params}`);
       if (response.ok) {
         const data = await response.json();
         setProducts(data.products || []);
@@ -774,7 +787,7 @@ const DiscountsPage = ({ onAddToCart }) => {
 
   const fetchDiscountedProducts = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/discounted`);
+      const response = await fetch(`${BACKEND_URL}/api/products/discounted`);
       if (response.ok) {
         const data = await response.json();
         setDiscountedProducts(data);
@@ -786,7 +799,7 @@ const DiscountsPage = ({ onAddToCart }) => {
 
   const fetchDiscountCodes = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/discounts`);
+      const response = await fetch(`${BACKEND_URL}/api/discounts`);
       if (response.ok) {
         const data = await response.json();
         setDiscountCodes(data);
@@ -877,7 +890,7 @@ const ArticlesSection = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/articles`);
+      const response = await fetch(`${BACKEND_URL}/api/articles`);
       if (response.ok) {
         const data = await response.json();
         setArticles(data.slice(0, 3)); // Show only first 3 articles
@@ -939,7 +952,7 @@ const ServicesSection = () => {
 
   const fetchServices = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/services`);
+      const response = await fetch(`${BACKEND_URL}/api/services`);
       if (response.ok) {
         const data = await response.json();
         setServices(data);
@@ -1313,7 +1326,7 @@ const CartModal = ({ isOpen, onClose, cartItems, onRemoveItem, onCheckout }) => 
     try {
       const productDetails = await Promise.all(
         cartItems.map(async (item) => {
-          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/products/${item.product_id}`);
+          const response = await fetch(`${BACKEND_URL}/api/products/${item.product_id}`);
           if (response.ok) {
             const product = await response.json();
             return { ...product, quantity: item.quantity };
@@ -1456,7 +1469,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, totalAmount, onOrderComplet
     if (!discountCode.trim()) return;
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/discounts/validate`, {
+      const response = await fetch(`${BACKEND_URL}/api/discounts/validate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1496,7 +1509,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, totalAmount, onOrderComplet
         discount_code: discountCode || null
       };
 
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/orders`, {
+      const response = await fetch(`${BACKEND_URL}/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1628,11 +1641,13 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, totalAmount, onOrderComplet
 // Footer Component
 const Footer = () => {
   return (
-    <footer className="bg-gray-800 text-white py-12">
+    <footer className="bg-gray-900 text-white py-12">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="text-right">
-            <h3 className="text-2xl font-bold mb-4">پیک سلامت</h3>
+            <h3 className="text-2xl font-bold mb-4 flex items-center justify-end gap-2">
+              <Stethoscope className="w-5 h-5" /> پیک سلامت
+            </h3>
             <p className="text-gray-300 leading-relaxed">
               فروشگاه آنلاین تجهیزات پزشکی با بهترین کیفیت و قیمت
             </p>
@@ -1663,15 +1678,15 @@ const Footer = () => {
             <ul className="space-y-3 text-gray-300">
               <li className="flex items-center justify-end space-x-reverse space-x-2">
                 <span>۰۲۱-۱۲۳۴۵۶۷۸</span>
-                <span>📞</span>
+                <Phone className="w-5 h-5" />
               </li>
               <li className="flex items-center justify-end space-x-reverse space-x-2">
                 <span>info@pickselamat.com</span>
-                <span>📧</span>
+                <Mail className="w-5 h-5" />
               </li>
               <li className="flex items-center justify-end space-x-reverse space-x-2">
                 <span>تهران، خیابان ولیعصر</span>
-                <span>📍</span>
+                <MapPin className="w-5 h-5" />
               </li>
             </ul>
           </div>
