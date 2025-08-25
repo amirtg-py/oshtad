@@ -302,7 +302,7 @@ const ProductCard = ({ product, onAddToCart, onProductClick }) => {
 
   return (
     <Card
-      className="product-card rounded-2xl border border-gray-200 hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 group cursor-pointer"
+      className="product-card rounded-2xl border border-gray-200 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 group cursor-pointer"
       onClick={() => onProductClick(product)}
     >
       <div className="relative overflow-hidden">
