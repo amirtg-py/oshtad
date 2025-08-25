@@ -4,6 +4,20 @@ import { Stethoscope, ShoppingCart, LogIn, UserPlus, Phone, Mail, MapPin } from 
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardFooter, CardTitle } from './components/ui/card';
 
+const SplitText = ({ text, className }) => (
+  <span className={className} aria-label={text}>
+    {text.split('').map((char, idx) => (
+      <span
+        key={idx}
+        className="inline-block opacity-0 animate-fade-in-up"
+        style={{ animationDelay: `${idx * 40}ms` }}
+      >
+        {char}
+      </span>
+    ))}
+  </span>
+);
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
 // Auth Context
@@ -198,9 +212,11 @@ const HeroSection = ({ onProductsClick }) => {
         <div className="flex flex-col lg:flex-row items-center">
           <div className="lg:w-1/2 text-right hero-content">
             <h2 className="text-4xl lg:text-6xl font-bold text-gray-800 mb-6 leading-tight">
-              برای پزشکان
+              <SplitText text="برای پزشکان" />
               <br />
-              <span className="text-blue-600 gradient-text">و متخصصان پزشکی</span>
+              <span className="text-blue-600 gradient-text">
+                <SplitText text="و متخصصان پزشکی" />
+              </span>
             </h2>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
               ما محصولات و خدمات بهداشتی با کیفیت را ارائه می دهیم
@@ -208,13 +224,13 @@ const HeroSection = ({ onProductsClick }) => {
             <div className="flex space-x-reverse space-x-4">
               <Button
                 onClick={onProductsClick}
-                className="bg-blue-600 hover:bg-blue-700 px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:-translate-y-1 pulse-glow"
+                className="px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:-translate-y-1 pulse-glow"
               >
                 اکنون خرید کنید
               </Button>
               <Button
                 variant="outline"
-                className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg font-semibold shadow-lg"
+                className="px-8 py-4 text-lg font-semibold"
               >
                 مشاهده کاتالوگ
               </Button>
@@ -350,10 +366,9 @@ const ProductCard = ({ product, onAddToCart, onProductClick }) => {
 };
 
 // Products Section
-const ProductsSection = ({ onAddToCart, featured = true }) => {
+const ProductsSection = ({ onAddToCart, onProductClick, featured = true }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     fetchProducts();
@@ -394,241 +409,22 @@ const ProductsSection = ({ onAddToCart, featured = true }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {products.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
+            <ProductCard
+              key={product.id}
+              product={product}
               onAddToCart={onAddToCart}
-              onProductClick={setSelectedProduct}
+              onProductClick={onProductClick}
             />
           ))}
         </div>
       </div>
-
-      {/* Product Detail Modal */}
-      {selectedProduct && (
-        <ProductDetailModal 
-          product={selectedProduct} 
-          onClose={() => setSelectedProduct(null)}
-          onAddToCart={onAddToCart}
-        />
-      )}
     </section>
   );
 };
 
 // Product Detail Modal
-const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
-  const [reviews, setReviews] = useState([]);
-  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const { user, token } = useAuth();
-
-  useEffect(() => {
-    fetchReviews();
-  }, [product.id]);
-
-  const fetchReviews = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${product.id}/reviews`);
-      if (response.ok) {
-        const data = await response.json();
-        setReviews(data);
-      }
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-    }
-  };
-
-  const submitReview = async (e) => {
-    e.preventDefault();
-    if (!user) {
-      alert('برای ثبت نظر باید وارد شوید');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/products/${product.id}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(newReview),
-      });
-
-      if (response.ok) {
-        setNewReview({ rating: 5, comment: '' });
-        setShowReviewForm(false);
-        fetchReviews();
-        alert('نظر شما با موفقیت ثبت شد');
-      }
-    } catch (error) {
-      console.error('Error submitting review:', error);
-      alert('خطا در ثبت نظر');
-    }
-  };
-
-  const hasDiscount = product.discount_percentage;
-  const discountedPrice = hasDiscount ? product.price * (1 - product.discount_percentage / 100) : product.price;
-
-  return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="relative">
-          <button 
-            onClick={onClose}
-            className="absolute top-4 left-4 text-white bg-black bg-opacity-50 hover:bg-opacity-70 w-10 h-10 flex items-center justify-center z-10 transition-all"
-          >
-            ✕
-          </button>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
-            {/* Product Image */}
-            <div className="relative">
-              <img 
-                src={product.image} 
-                alt={product.name}
-                className="w-full h-96 object-cover shadow-lg"
-              />
-              {hasDiscount && (
-                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 font-bold">
-                  {product.discount_percentage}% تخفیف
-                </div>
-              )}
-            </div>
-
-            {/* Product Info */}
-            <div className="text-right">
-              <h1 className="text-3xl font-bold text-gray-800 mb-4">{product.name}</h1>
-              <div className="mb-6">
-                <span className="bg-blue-100 text-blue-800 px-3 py-1 text-sm font-semibold">
-                  {product.category}
-                </span>
-              </div>
-              
-              <p className="text-gray-600 mb-6 leading-relaxed text-lg">{product.description}</p>
-              
-              <div className="mb-6">
-                <span className="text-gray-600">موجودی: </span>
-                <span className="font-semibold text-green-600">{product.stock} عدد</span>
-              </div>
-
-              <div className="mb-8">
-                {hasDiscount && (
-                  <span className="text-2xl text-gray-400 line-through block mb-2">
-                    {product.price.toLocaleString()} تومان
-                  </span>
-                )}
-                <span className="text-4xl font-bold text-blue-600">
-                  {Math.round(discountedPrice).toLocaleString()} تومان
-                </span>
-              </div>
-
-              <button 
-                onClick={() => onAddToCart(product)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-xl font-bold transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 mb-4"
-              >
-                افزودن به سبد خرید
-              </button>
-
-              <button 
-                className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-xl font-bold transition-all"
-              >
-                خرید فوری
-              </button>
-            </div>
-          </div>
-
-          {/* Reviews Section */}
-          <div className="border-t bg-gray-50 p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-800">نظرات کاربران</h3>
-              {user && (
-                <button 
-                  onClick={() => setShowReviewForm(!showReviewForm)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 font-semibold transition-colors"
-                >
-                  ثبت نظر
-                </button>
-              )}
-            </div>
-
-            {showReviewForm && (
-              <form onSubmit={submitReview} className="mb-8 bg-white p-6 shadow-lg">
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2 text-right">
-                    امتیاز
-                  </label>
-                  <select
-                    value={newReview.rating}
-                    onChange={(e) => setNewReview(prev => ({...prev, rating: parseInt(e.target.value)}))}
-                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
-                  >
-                    {[1,2,3,4,5].map(rating => (
-                      <option key={rating} value={rating}>{rating} ستاره</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2 text-right">
-                    نظر شما
-                  </label>
-                  <textarea
-                    value={newReview.comment}
-                    onChange={(e) => setNewReview(prev => ({...prev, comment: e.target.value}))}
-                    className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500 text-right"
-                    rows="4"
-                    required
-                  />
-                </div>
-                
-                <button
-                  type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 font-semibold transition-colors"
-                >
-                  ثبت نظر
-                </button>
-              </form>
-            )}
-
-            <div className="space-y-4">
-              {reviews.length === 0 ? (
-                <p className="text-gray-600 text-center py-8">هنوز نظری ثبت نشده است</p>
-              ) : (
-                reviews.map((review) => (
-                  <div key={review.id} className="bg-white p-6 shadow">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="text-right">
-                        <div className="font-semibold text-gray-800">{review.user_name}</div>
-                        <div className="text-yellow-500">
-                          {'★'.repeat(review.rating)}{'☆'.repeat(5-review.rating)}
-                        </div>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {new Date(review.created_at).toLocaleDateString('fa-IR')}
-                      </div>
-                    </div>
-                    <p className="text-gray-700 text-right">{review.comment}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Full Products Page
-const ProductsPage = ({ onAddToCart, initialCategory = '' }) => {
+const ProductsPage = ({ onAddToCart, onProductClick, initialCategory = '' }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
@@ -645,7 +441,6 @@ const ProductsPage = ({ onAddToCart, initialCategory = '' }) => {
     total: 0,
     total_pages: 0
   });
-  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     fetchCategories();
@@ -797,11 +592,11 @@ const ProductsPage = ({ onAddToCart, initialCategory = '' }) => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
               {products.map((product) => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product} 
+                <ProductCard
+                  key={product.id}
+                  product={product}
                   onAddToCart={onAddToCart}
-                  onProductClick={setSelectedProduct}
+                  onProductClick={onProductClick}
                 />
               ))}
             </div>
@@ -828,20 +623,12 @@ const ProductsPage = ({ onAddToCart, initialCategory = '' }) => {
         )}
       </div>
 
-      {/* Product Detail Modal */}
-      {selectedProduct && (
-        <ProductDetailModal 
-          product={selectedProduct} 
-          onClose={() => setSelectedProduct(null)}
-          onAddToCart={onAddToCart}
-        />
-      )}
     </div>
   );
 };
 
 // Discounts Page
-const DiscountsPage = ({ onAddToCart }) => {
+const DiscountsPage = ({ onAddToCart, onProductClick }) => {
   const [discountedProducts, setDiscountedProducts] = useState([]);
   const [discountCodes, setDiscountCodes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -923,11 +710,11 @@ const DiscountsPage = ({ onAddToCart }) => {
           <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">محصولات با تخفیف ویژه</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {discountedProducts.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
+              <ProductCard
+                key={product.id}
+                product={product}
                 onAddToCart={onAddToCart}
-                onProductClick={() => {}}
+                onProductClick={onProductClick}
               />
             ))}
           </div>
@@ -939,6 +726,152 @@ const DiscountsPage = ({ onAddToCart }) => {
           <p className="text-xl mb-6">تا ۵۰٪ تخفیف روی محصولات منتخب</p>
           <div className="text-6xl font-bold mb-4">۲۵٪</div>
           <p className="text-lg">تخفیف روی تمام تجهیزات پزشکی</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Product Detail Page
+const ProductDetailPage = ({ product, onAddToCart, onBack }) => {
+  const [reviews, setReviews] = useState([]);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const { user, token } = useAuth();
+
+  useEffect(() => {
+    fetchReviews();
+  }, [product.id]);
+
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/products/${product.id}/reviews`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+      }
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    }
+  };
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert('برای ثبت نظر باید وارد شوید');
+      return;
+    }
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/products/${product.id}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newReview)
+      });
+      if (res.ok) {
+        setNewReview({ rating: 5, comment: '' });
+        setShowReviewForm(false);
+        fetchReviews();
+      }
+    } catch (err) {
+      console.error('Error submitting review:', err);
+    }
+  };
+
+  const hasDiscount = product.discount_percentage;
+  const discountedPrice = hasDiscount ? product.price * (1 - product.discount_percentage / 100) : product.price;
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto px-4">
+        <Button onClick={onBack} className="mb-6">بازگشت</Button>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white p-8 shadow-lg">
+          <div className="relative">
+            <img src={product.image} alt={product.name} className="w-full h-96 object-cover" />
+            {hasDiscount && (
+              <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 font-bold">
+                {product.discount_percentage}% تخفیف
+              </div>
+            )}
+          </div>
+          <div className="text-right">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">{product.name}</h1>
+            <p className="text-gray-600 mb-6 leading-relaxed">{product.description}</p>
+            <div className="mb-6">
+              <span className="text-gray-600">موجودی: </span>
+              <span className="font-semibold text-green-600">{product.stock} عدد</span>
+            </div>
+            <div className="mb-8">
+              {hasDiscount && (
+                <span className="text-2xl text-gray-400 line-through block mb-2">
+                  {product.price.toLocaleString()} تومان
+                </span>
+              )}
+              <span className="text-4xl font-bold text-blue-600">
+                {Math.round(discountedPrice).toLocaleString()} تومان
+              </span>
+            </div>
+            <Button onClick={() => onAddToCart(product)} className="w-full mb-4">
+              افزودن به سبد خرید
+            </Button>
+          </div>
+        </div>
+        <div className="mt-8 bg-white p-8 shadow-lg">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-800">نظرات کاربران</h3>
+            {user && (
+              <Button onClick={() => setShowReviewForm(!showReviewForm)}>
+                ثبت نظر
+              </Button>
+            )}
+          </div>
+          {showReviewForm && (
+            <form onSubmit={submitReview} className="mb-8">
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2 text-right">امتیاز</label>
+                <select
+                  value={newReview.rating}
+                  onChange={(e) => setNewReview(prev => ({ ...prev, rating: parseInt(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500"
+                >
+                  {[1,2,3,4,5].map(r => (
+                    <option key={r} value={r}>{r} ستاره</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2 text-right">نظر شما</label>
+                <textarea
+                  value={newReview.comment}
+                  onChange={(e) => setNewReview(prev => ({ ...prev, comment: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500 text-right"
+                  rows="4"
+                  required
+                />
+              </div>
+              <Button type="submit">ثبت نظر</Button>
+            </form>
+          )}
+          <div className="space-y-4">
+            {reviews.length === 0 ? (
+              <p className="text-gray-600 text-center py-8">هنوز نظری ثبت نشده است</p>
+            ) : (
+              reviews.map(r => (
+                <div key={r.id} className="bg-gray-50 p-4">
+                  <div className="flex justify-between mb-2">
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-800">{r.user_name}</div>
+                      <div className="text-yellow-500">{'★'.repeat(r.rating)}{'☆'.repeat(5-r.rating)}</div>
+                    </div>
+                    <div className="text-sm text-gray-500">{new Date(r.created_at).toLocaleDateString('fa-IR')}</div>
+                  </div>
+                  <p className="text-gray-700 text-right">{r.comment}</p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -1008,7 +941,7 @@ const ArticlesSection = () => {
 };
 
 // Services Section
-const ServicesSection = () => {
+const ServicesSection = ({ onServiceClick, onProductsClick }) => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1061,9 +994,12 @@ const ServicesSection = () => {
               <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                 <h3 className="text-2xl font-bold mb-4 text-right">{service.title}</h3>
                 <p className="mb-6 text-right opacity-90 leading-relaxed">{service.description}</p>
-                <button className="bg-white text-gray-800 px-8 py-3 font-bold hover:bg-gray-100 transition-colors shadow-lg transform hover:-translate-y-1">
+                <Button
+                  onClick={() => (index === 0 ? onServiceClick(service) : onProductsClick())}
+                  className="bg-white/30 text-white hover:bg-white/40 px-8 py-3 font-bold"
+                >
                   {index === 0 ? 'بیشتر بدانید' : 'مشاهده محصولات'}
-                </button>
+                </Button>
               </div>
               {index === 1 && (
                 <div className="absolute top-4 right-4 bg-red-500 text-white px-6 py-3 font-bold animate-pulse shadow-lg">
@@ -1077,6 +1013,27 @@ const ServicesSection = () => {
     </section>
   );
 };
+
+// Service Detail Page
+const ServiceDetailPage = ({ service, onBack }) => (
+  <div className="min-h-screen bg-gray-50 py-8">
+    <div className="container mx-auto px-4">
+      <Button onClick={onBack} className="mb-6">بازگشت</Button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white p-8 shadow-lg">
+        <img src={service.image} alt={service.title} className="w-full h-96 object-cover" />
+        <div className="text-right">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">{service.title}</h1>
+          <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
+          <ul className="space-y-2 mb-4 list-disc pr-5">
+            {service.features.map((f, i) => (
+              <li key={i} className="text-gray-700">{f}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 // Features Section
 const FeaturesSection = () => {
@@ -1778,6 +1735,8 @@ function App() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedService, setSelectedService] = useState(null);
 
   const { user, token, loading } = useAuth();
 
@@ -1861,6 +1820,16 @@ function App() {
     setShowCheckoutModal(false);
   };
 
+  const handleProductClick = (product) => {
+    setSelectedProduct(product);
+    setCurrentPage('product-detail');
+  };
+
+  const handleServiceClick = (service) => {
+    setSelectedService(service);
+    setCurrentPage('service-detail');
+  };
+
   const calculateTotalAmount = () => {
     // This will be calculated in CartModal based on actual product prices
     return 0;
@@ -1880,16 +1849,28 @@ function App() {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'products':
-        return <ProductsPage onAddToCart={handleAddToCart} initialCategory={selectedCategory} />;
+        return <ProductsPage onAddToCart={handleAddToCart} onProductClick={handleProductClick} initialCategory={selectedCategory} />;
       case 'discounts':
-        return <DiscountsPage onAddToCart={handleAddToCart} />;
+        return <DiscountsPage onAddToCart={handleAddToCart} onProductClick={handleProductClick} />;
+      case 'product-detail':
+        return selectedProduct ? (
+          <ProductDetailPage
+            product={selectedProduct}
+            onAddToCart={handleAddToCart}
+            onBack={() => setCurrentPage('products')}
+          />
+        ) : null;
+      case 'service-detail':
+        return selectedService ? (
+          <ServiceDetailPage service={selectedService} onBack={() => setCurrentPage('home')} />
+        ) : null;
       default:
         return (
           <>
             <HeroSection onProductsClick={() => setCurrentPage('products')} />
             <CategoriesSection onSelectCategory={(cat) => { setSelectedCategory(cat); setCurrentPage('products'); }} />
-            <ProductsSection onAddToCart={handleAddToCart} />
-            <ServicesSection />
+            <ProductsSection onAddToCart={handleAddToCart} onProductClick={handleProductClick} />
+            <ServicesSection onServiceClick={handleServiceClick} onProductsClick={() => setCurrentPage('products')} />
             <ArticlesSection />
             <FeaturesSection />
           </>
