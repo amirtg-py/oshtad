@@ -4,17 +4,13 @@ import { Stethoscope, ShoppingCart, LogIn, UserPlus, Phone, Mail, MapPin } from 
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardFooter, CardTitle } from './components/ui/card';
 
-const SplitText = ({ text, className }) => (
-  <span className={className} aria-label={text}>
-    {text.split('').map((char, idx) => (
-      <span
-        key={idx}
-        className="inline-block opacity-0 animate-fade-in-up"
-        style={{ animationDelay: `${idx * 40}ms` }}
-      >
-        {char}
-      </span>
-    ))}
+// Fade-in utility that keeps complex scripts connected
+const FadeInText = ({ children, delay = 0, className = '' }) => (
+  <span
+    className={`inline-block opacity-0 animate-fade-in-up ${className}`.trim()}
+    style={{ animationDelay: `${delay}ms` }}
+  >
+    {children}
   </span>
 );
 
@@ -212,10 +208,10 @@ const HeroSection = ({ onProductsClick }) => {
         <div className="flex flex-col lg:flex-row items-center">
           <div className="lg:w-1/2 text-right hero-content">
             <h2 className="text-4xl lg:text-6xl font-bold text-gray-800 mb-6 leading-tight">
-              <SplitText text="برای پزشکان" />
+              <FadeInText>برای پزشکان</FadeInText>
               <br />
               <span className="text-blue-600 gradient-text">
-                <SplitText text="و متخصصان پزشکی" />
+                <FadeInText delay={200}>و متخصصان پزشکی</FadeInText>
               </span>
             </h2>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
@@ -285,7 +281,7 @@ const CategoriesSection = ({ onSelectCategory }) => {
           {categories.map((cat, idx) => (
             <Card
               key={cat.name}
-              className={`relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br ${colors[idx % colors.length]}`}
+              className={`relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 bg-gradient-to-br ${colors[idx % colors.length]}`}
             >
               <CardContent className="p-6 flex flex-col items-end text-right h-full">
                 <h3 className="text-lg font-bold mb-4">{cat.name}</h3>
@@ -300,7 +296,7 @@ const CategoriesSection = ({ onSelectCategory }) => {
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="w-24 h-24 object-cover absolute left-4 bottom-4 rounded-lg shadow-lg"
+                  className="w-24 h-24 object-cover absolute right-4 bottom-4 rounded-lg shadow-lg"
                 />
               )}
             </Card>
@@ -1937,4 +1933,5 @@ const AppWithAuth = () => {
   );
 };
 
+export { HeroSection };
 export default AppWithAuth;
